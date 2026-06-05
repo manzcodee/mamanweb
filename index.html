@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MamanWeb - Birthday Countdown Gemoy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: linear-gradient(135deg, #fff5f7 0%, #ffe4e6 100%); min-height: 100vh; }
+        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.5); }
+        .cute-shadow { box-shadow: 0 20px 40px -10px rgba(219, 39, 119, 0.2); }
+        .hidden-section { display: none; }
+        .heart-float { animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+
+    <!-- Form Input -->
+    <div id="setup-page" class="w-full max-w-md glass p-8 rounded-3xl cute-shadow animate__animated animate__fadeInUp">
+        <div class="text-center mb-8">
+            <i data-lucide="sparkles" class="w-12 h-12 text-pink-500 mx-auto mb-2 heart-float"></i>
+            <h1 class="text-3xl font-extrabold text-pink-600">MamanWeb</h1>
+            <p class="text-pink-400 text-sm">Hitung mundur ulang tahun berikutnya</p>
+        </div>
+        
+        <div class="space-y-4">
+            <input type="text" id="name" placeholder="Nama penerima..." class="w-full p-4 rounded-2xl border-2 border-pink-100 focus:border-pink-500 outline-none transition-all">
+            
+            <div class="grid grid-cols-2 gap-2">
+                <input type="number" id="day" placeholder="Tanggal (e.g. 15)" class="p-4 rounded-2xl border-2 border-pink-100 outline-none focus:border-pink-500">
+                <input type="number" id="month" placeholder="Bulan (1-12)" class="p-4 rounded-2xl border-2 border-pink-100 outline-none focus:border-pink-500">
+            </div>
+
+            <div class="relative">
+                <label class="block text-xs font-bold text-pink-400 mb-1 ml-1 uppercase">Jam Peringatan</label>
+                <select id="time-select" class="w-full p-4 rounded-2xl border-2 border-pink-100 bg-white outline-none focus:border-pink-500 appearance-none cursor-pointer">
+                </select>
+                <i data-lucide="chevron-down" class="absolute right-4 top-10 text-pink-400 pointer-events-none"></i>
+            </div>
+
+            <textarea id="message" placeholder="Pesan spesial untuknya..." class="w-full p-4 rounded-2xl border-2 border-pink-100 focus:border-pink-500 outline-none h-24"></textarea>
+            
+            <button onclick="startTimer()" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 rounded-2xl transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-pink-200">
+                Mulai Hitung Mundur! 🎈
+            </button>
+        </div>
+    </div>
+
+    <!-- Timer Page -->
+    <div id="timer-page" class="hidden-section w-full max-w-md glass p-8 rounded-3xl cute-shadow text-center animate__animated animate__zoomIn">
+        <h2 id="display-name" class="text-xl font-bold text-pink-700 mb-6"></h2>
+        
+        <div id="timer" class="grid grid-cols-4 gap-2 mb-8">
+            <div class="bg-white/50 p-2 rounded-2xl"><span id="days" class="block text-xl font-extrabold text-pink-600">0</span><small class="text-[9px] uppercase font-bold text-pink-400">Hari</small></div>
+            <div class="bg-white/50 p-2 rounded-2xl"><span id="hours" class="block text-xl font-extrabold text-pink-600">0</span><small class="text-[9px] uppercase font-bold text-pink-400">Jam</small></div>
+            <div class="bg-white/50 p-2 rounded-2xl"><span id="minutes" class="block text-xl font-extrabold text-pink-600">0</span><small class="text-[9px] uppercase font-bold text-pink-400">Menit</small></div>
+            <div class="bg-white/50 p-2 rounded-2xl"><span id="seconds" class="block text-xl font-extrabold text-pink-600">0</span><small class="text-[9px] uppercase font-bold text-pink-400">Detik</small></div>
+        </div>
+
+        <div id="message-display" class="hidden animate__animated animate__fadeInUp bg-white p-6 rounded-3xl border border-pink-100 shadow-inner italic text-pink-900 leading-relaxed font-medium"></div>
+        
+        <button onclick="resetTimer()" class="mt-8 text-pink-400 hover:text-pink-600 underline text-sm">Hapus Data</button>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const timeSelect = document.getElementById('time-select');
+        for (let i = 0; i < 24; i++) {
+            const val = i.toString().padStart(2, '0') + ':00';
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.innerHTML = val;
+            timeSelect.appendChild(opt);
+        }
+
+        function getNextBirthday(day, month, hour) {
+            const now = new Date();
+            let year = now.getFullYear();
+            let target = new Date(year, month - 1, day, hour, 0, 0);
+
+            if (target < now) {
+                target.setFullYear(year + 1);
+            }
+            return target.getTime();
+        }
+
+        function startTimer() {
+            const name = document.getElementById('name').value;
+            const d = parseInt(document.getElementById('day').value);
+            const m = parseInt(document.getElementById('month').value);
+            const hour = parseInt(document.getElementById('time-select').value);
+            const msg = document.getElementById('message').value;
+
+            if(!name || !d || !m || m < 1 || m > 12 || d < 1 || d > 31) return alert("Lengkapi data dengan benar ya sayang! 🌸");
+
+            const targetDate = getNextBirthday(d, m, hour);
+            
+            localStorage.setItem('maman_data', JSON.stringify({name, targetDate, msg}));
+            showTimer();
+        }
+
+        function showTimer() {
+            document.getElementById('setup-page').classList.add('hidden-section');
+            document.getElementById('timer-page').classList.remove('hidden-section');
+            
+            const data = JSON.parse(localStorage.getItem('maman_data'));
+            document.getElementById('display-name').innerText = `Menuju hari spesial ${data.name}!`;
+
+            const update = () => {
+                const now = new Date().getTime();
+                const diff = data.targetDate - now;
+
+                if (diff <= 0) {
+                    document.getElementById('timer').classList.add('hidden');
+                    const msgBox = document.getElementById('message-display');
+                    msgBox.classList.remove('hidden');
+                    msgBox.innerHTML = `🎉<br><br>${data.message || "Selamat Ulang Tahun! Semoga harimu penuh kebahagiaan."}<br><br>✨`;
+                    return;
+                }
+
+                document.getElementById('days').innerText = Math.floor(diff / (1000 * 60 * 60 * 24));
+                document.getElementById('hours').innerText = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                document.getElementById('minutes').innerText = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                document.getElementById('seconds').innerText = Math.floor((diff % (1000 * 60)) / 1000);
+            };
+
+            update();
+            setInterval(update, 1000);
+        }
+
+        function resetTimer() {
+            localStorage.removeItem('maman_data');
+            location.reload();
+        }
+
+        window.onload = () => {
+            if(localStorage.getItem('maman_data')) showTimer();
+        }
+    </script>
+</body>
+</html>
